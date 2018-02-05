@@ -33,7 +33,7 @@ class WorkAtCommonCodeAsADeveloperTestCase(unittest.TestCase):
     def test_get_github_members(self):
         # NOTE: The answers here is correct at time of writing, feel free to
         # update this if the count on https://github.com/commoncode changes
-        self.assertEqual(get_github_members('commoncode'), 14)
+        self.assertEqual(get_github_members('commoncode'), 6)
         self.assertEqual(get_github_members('melbdjango'), 2)
         self.assertTrue(get_github_members('github') > 150)
 
