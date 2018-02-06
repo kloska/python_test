@@ -45,10 +45,35 @@ def get_github_members(org_name):
   return -1
 
  if response.getcode() == 200:
-  # Convert bytes from response.read() to str with decode() then to list with json.loads()
-  data = json.loads(response.read().decode())
-  public_members = len(data)
-  return public_members
+  response_header = response.info()
+  if 'link' in response_header:
+   link_header_list = response_header['link'].split(';')
+   #max pages start index
+   i = link_header_list[1].find('page=')
+   i += 5
+   last_page = int(link_header_list[1][i:-1])
+
+   #count public members from first page 
+   data = json.loads(response.read().decode())
+   public_members = len(data)
+
+   #perform urlopen() and public members count until last_page reached
+   x = 1
+   while x <= last_page:
+    x += 1
+    tmp_github_url = 'https://api.github.com/orgs/{0}/public_members?page={1}'.format(org_name,x)
+
+    response = request.urlopen(tmp_github_url)
+    data = json.loads(response.read().decode())
+    public_members += len(data)
+    
+   #return result once loop reached last_page
+   return public_members
+  else: 
+   # Convert bytes from response.read() to str with decode() then to list with json.loads()
+   data = json.loads(response.read().decode())
+   public_members = len(data)
+   return public_members
  else:
   return -1
 
@@ -57,14 +82,21 @@ def get_ssl_expiry(domain):
  Takes a domain and returns a date that represents when the SSL certificate
  will expire.
  """
-
+ 
+ #Return a new SSLContext object with default settings
  ctx = ssl.create_default_context()
+ 
+ # Create python socket object and return SSL socket
  s = ctx.wrap_socket(socket.socket(), server_hostname=domain) 
+ 
+ # connect to provided address 
  s.connect((domain, 443)) 
  
+ # Retreive certificate of destination
  cert = s.getpeercert()
 
  cert_exp_date = datetime.strptime(cert['notAfter'], '%b %d %X %Y %Z')
  
  s.close() 
+
  return cert_exp_date.date()
